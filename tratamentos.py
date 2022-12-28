@@ -2,21 +2,32 @@ import csv
 import json
 
 
-earningsListWithESGFile = open("sample.json")
+earningsListWithESGFile = open("sample2.json")
 dataJson = json.load(earningsListWithESGFile)
 
-header = ['name', 'area', 'country_code2', 'country_code3']
+header = ['name', 'totalCash', 'ebitda', 'totalDebt', 'totalRevenue', 'totalEsg']
 datas = []
+errors = [] 
 
 for o in dataJson:
     for key in o:
-        dataO = o[key]
-        quartersFinancials = dataO["earning"][key]["financialsChart"]["quarterly"]
-        esg = dataO["esg"][key]["totalEsg"]
-        
-        #dataList = [key, dataO.]
+        financial = o[key]["financial"]
+        esg = o[key]["esg"]
+        if (not 'Quote not found for ticker symbol:' in financial) and (not 'Quote not found for ticker symbol:' in esg) and financial["financialCurrency"] == "USD":
+            try:
+                totalCash = financial["totalCash"]
+                ebitda = financial["ebitda"]
+                totalDebt = financial["totalDebt"]
+                totalRevenue = financial["totalRevenue"]
+                esgTotal = o[key]["esg"]["totalEsg"]
+                
+                dataList = [key, totalCash, ebitda, totalDebt, totalRevenue, esgTotal]
+                datas.append(dataList)
+            except:
+                errors.append(key)
 
-with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+print(datas)
+with open('dados.csv', 'w', encoding='UTF8', newline='') as f:
     writer = csv.writer(f)
 
     # write the header
@@ -24,3 +35,7 @@ with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
 
     # write the data
     writer.writerows(datas)
+
+
+with open("error.txt", "w") as outfile:
+    outfile.write(str(errors))
